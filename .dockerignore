@@ -1,0 +1,7 @@
+__pycache__
+node_modules
+osrm/foot
+osrm/car
+osrm/bicycle
+osrm/osm
+.nuxt

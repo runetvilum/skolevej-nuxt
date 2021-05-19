@@ -88,3 +88,7 @@ sw.*
 
 # Vim swap files
 *.swp
+osrm/foot
+osrm/car
+osrm/bicycle
+osrm/osm
