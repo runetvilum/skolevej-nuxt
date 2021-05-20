@@ -157,7 +157,7 @@ const route = (transport, klasse, coordinates, retning) => {
 }
 app.post('/route', async (req, res, next) => {
   try {
-    const result = await route(
+    let result = await route(
       req.body.transport,
       req.body.klasse,
       req.body.coordinates,
@@ -166,6 +166,14 @@ app.post('/route', async (req, res, next) => {
 
     const farlig =
       result.waypoints[0].distance > 100 || result.waypoints[1].distance > 100
+    if (farlig) {
+      result = await route(
+        req.body.transport,
+        11,
+        req.body.coordinates,
+        req.body.retning
+      )
+    }
     res.json({
       tilskud:
         farlig || result.routes[0].distance > klasser[req.body.klasse].max,
