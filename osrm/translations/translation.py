@@ -14,7 +14,7 @@ def filterTags(attrs):
     print type(attrs['vejklasse_'])
     '''
 
-    klasse = attrs['vejklasse_']
+    klasse = attrs['vejklasse_brudt']
     if klasse == u'Lokalvej-Primær':
         tags['highway'] = 'primary'
     if klasse == u'Lokalvej-Sekundær':

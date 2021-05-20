@@ -71,6 +71,12 @@ const klasser = [
     route: '7-10',
     max: 9000,
   },
+  {
+    text: 'Alle veje',
+    value: 11,
+    route: 'all',
+    max: 9000,
+  },
 ]
 const data = {
   bicycle: {
@@ -86,14 +92,11 @@ const data = {
       path: path.join(__dirname, '../osrm/bicycle/Skolevej_7-10.osrm'),
       algorithm: 'MLD',
     }),
-    /*
     all: new OSRM({
       path: path.join(__dirname, '../osrm/bicycle/Vejmidte.osrm'),
       algorithm: 'MLD',
     }),
-    */
   },
-  /*
   car: {
     '0-3': new OSRM({
       path: path.join(__dirname, '../osrm/car/Skolevej_0-3.osrm'),
@@ -112,7 +115,6 @@ const data = {
       algorithm: 'MLD',
     }),
   },
-  */
   foot: {
     '0-3': new OSRM({
       path: path.join(__dirname, '../osrm/foot/Skolevej_0-3.osrm'),
@@ -126,20 +128,19 @@ const data = {
       path: path.join(__dirname, '../osrm/foot/Skolevej_7-10.osrm'),
       algorithm: 'MLD',
     }),
-    /*
     all: new OSRM({
       path: path.join(__dirname, '../osrm/foot/Vejmidte.osrm'),
       algorithm: 'MLD',
     }),
-    */
   },
 }
-const route = (transport, klasse, coordinates) => {
+const route = (transport, klasse, coordinates, retning) => {
   return new Promise((resolve, reject) => {
     const a = klasser[klasse]
     data[transport][a.route].route(
       {
-        coordinates,
+        coordinates:
+          retning === 0 ? coordinates : [coordinates[1], coordinates[0]],
         continue_straight: false,
         overview: 'false',
         geometries: 'polyline6',
@@ -155,20 +156,14 @@ const route = (transport, klasse, coordinates) => {
   })
 }
 app.post('/route', async (req, res, next) => {
-  // req.body.geometries = 'geojson'
   try {
-    let result = await route(
+    const result = await route(
       req.body.transport,
       req.body.klasse,
-      req.body.coordinates
+      req.body.coordinates,
+      req.body.retning
     )
-    const resultReverse = await route(req.body.transport, req.body.klasse, [
-      req.body.coordinates[1],
-      req.body.coordinates[0],
-    ])
-    if (result.routes[0].distance < resultReverse.routes[0].distance) {
-      result = resultReverse
-    }
+
     const farlig =
       result.waypoints[0].distance > 100 || result.waypoints[1].distance > 100
     res.json({
@@ -181,27 +176,90 @@ app.post('/route', async (req, res, next) => {
     next(err)
   }
 })
-app.get('/pdf/:adresse/:klasse/:skole/:transport', async (req, res) => {
+/*
+app.post('/route', async (req, res, next) => {
+  // req.body.geometries = 'geojson'
+  let farlig = false
+  let fejl = false
+  let result
+  let resultReverse
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-gpu'],
-    })
-    const page = await browser.newPage()
-    await page.goto(
-      `http://localhost:3000/print?adresse=${req.params.adresse}&klasse=${req.params.klasse}&skole=${req.params.skole}&transport=${req.params.transport}`,
-      { waitUntil: 'networkidle2' }
+    result = await route(
+      req.body.transport,
+      req.body.klasse,
+      req.body.coordinates
     )
-    const buf = await page.pdf({ format: 'A4' })
-    await browser.close()
-    res.setHeader('Content-Length', buf.length)
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', 'attachment; filename="tilskud.pdf"')
-    res.send(buf)
+    resultReverse = await route(req.body.transport, req.body.klasse, [
+      req.body.coordinates[1],
+      req.body.coordinates[0],
+    ])
+    if (result.routes[0].distance < resultReverse.routes[0].distance) {
+      result = resultReverse
+    }
+
+    farlig =
+      result.waypoints[0].distance > 50 || result.waypoints[1].distance > 50
   } catch (err) {
-    console.log(err)
-    res.json(err)
+    fejl = true
+  }
+  try {
+    if (farlig || fejl) {
+      result = await route(req.body.transport, 11, req.body.coordinates)
+      resultReverse = await route(req.body.transport, 11, [
+        req.body.coordinates[1],
+        req.body.coordinates[0],
+      ])
+      if (result.routes[0].distance < resultReverse.routes[0].distance) {
+        result = resultReverse
+      }
+    }
+    res.json({
+      tilskud:
+        farlig || result.routes[0].distance > klasser[req.body.klasse].max,
+      farlig,
+      fejl,
+      ...result,
+    })
+  } catch (err) {
+    try {
+      result = await route('car', 11, req.body.coordinates)
+      res.json({
+        tilskud:
+          farlig || result.routes[0].distance > klasser[req.body.klasse].max,
+        farlig,
+        fejl,
+        ...result,
+      })
+    } catch (err) {
+      next(err)
+    }
   }
 })
+*/
+app.get(
+  '/pdf/:adresse/:klasse/:skole/:transport/:retning',
+  async (req, res) => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-gpu'],
+      })
+      const page = await browser.newPage()
+      await page.goto(
+        `http://localhost:3000/print?adresse=${req.params.adresse}&klasse=${req.params.klasse}&skole=${req.params.skole}&transport=${req.params.transport}&retning=${req.params.retning}`,
+        { waitUntil: 'networkidle2' }
+      )
+      const buf = await page.pdf({ format: 'A4' })
+      await browser.close()
+      res.setHeader('Content-Length', buf.length)
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'attachment; filename="tilskud.pdf"')
+      res.send(buf)
+    } catch (err) {
+      console.log(err)
+      res.json(err)
+    }
+  }
+)
 
 module.exports = app

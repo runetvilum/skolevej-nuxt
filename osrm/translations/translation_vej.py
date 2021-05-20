@@ -15,7 +15,7 @@ def filterTags(attrs):
     print type(attrs['vejklasse_'])
     '''
     tags['name'] = attrs['ogr_fid']+'-'+attrs['skolevej']+'-'+attrs['traf_kl']
-    klasse = attrs['vejklasse_']
+    klasse = attrs['vejklasse_brudt']
     if klasse == u'Lokalvej-Primær':
         tags['highway'] = 'primary'
     if klasse == u'Lokalvej-Sekundær':
@@ -25,13 +25,15 @@ def filterTags(attrs):
     if klasse == u'Anden vej':
         tags['highway'] = 'service'
     if klasse == u'Trafikvej-Gennemfart':
-        tags['highway'] = 'motorway_link'            
+        tags['highway'] = 'primary_link'
+    if klasse == u'Trafikvej-Fordeling':
+        tags['highway'] = 'primary_link'
     if klasse == u'Indkørselsvej':
         tags['highway'] = 'service'
     if klasse == u'Hovedsti':
         tags['highway'] = 'footway'
         tags['bicycle'] = 'yes'
-    if klasse == u'Sti, diverse':
+    if klasse == u'Sti,diverse':
         tags['highway'] = 'footway'
         tags['bicycle'] = 'yes'
     if klasse == u'Cykelsti langs vej':

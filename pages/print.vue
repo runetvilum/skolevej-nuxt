@@ -34,7 +34,9 @@
                 <v-icon color="info">mdi-bus-school</v-icon>
               </v-list-item-action>
               <v-list-item-content class="info--text">
-                {{ transport && transport.text }}
+                {{
+                  `${transport && transport.text} ${retning && retning.text}`
+                }}
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -59,7 +61,7 @@
                   adresse && (adresse.data.adgangsadresseid || adresse.data.id)
                 }&klasse=${klasse && klasse.value}&skole=${
                   skole && skole.value
-                }&transport=${transport.value}`"
+                }&transport=${transport.value}&retning=${retning.value}`"
                 target="_blank"
               >
                 Åbn
@@ -119,6 +121,17 @@ export default {
         },
       ],
       transport: null,
+      retninger: [
+        {
+          text: 'Fra hjem til skole',
+          value: 0,
+        },
+        {
+          text: 'Fra skole til hjem',
+          value: 1,
+        },
+      ],
+      retning: null,
       klasser: [
         {
           text: '0. klasse',
@@ -201,8 +214,15 @@ export default {
   },
   async mounted() {
     this.transport = this.transports[0]
+    this.retning = this.retninger[0]
     const query = this.$route.query
-    if (query.adresse && query.klasse && query.skole && query.transport) {
+    if (
+      query.adresse &&
+      query.klasse &&
+      query.skole &&
+      query.transport &&
+      query.retning
+    ) {
       const res = await this.$axios.get(
         `https://api.dataforsyningen.dk/adgangsadresser/${query.adresse}`
       )
@@ -219,6 +239,9 @@ export default {
       this.klasseChanged(this.klasse)
       this.transport = this.transports.find(
         (item) => item.value === query.transport
+      )
+      this.retning = this.retninger.find(
+        (item) => item.value === Number(query.retning)
       )
       this.skole = this.skoler.find(
         (item) => item.value === Number(query.skole)
@@ -318,15 +341,13 @@ export default {
       }
       this.route = null
     },
-    transportChanged(val) {
-      this.getRoute()
-    },
     async getRoute() {
       try {
         this.err = null
         const res = await this.$axios.post('/api/route', {
           klasse: this.klasse.value,
           transport: this.transport.value,
+          retning: this.retning.value,
           coordinates: [
             [this.adresse.data.x, this.adresse.data.y],
             this.skole.coordinates,

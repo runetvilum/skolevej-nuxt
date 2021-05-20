@@ -140,7 +140,7 @@
         "Tekst": "Nordvestskolen",
         "Link": "http://www.helsingorskole.dk/",
         "distrikt": [6],
-        "klasse": [7,8,9]
+        "klasse": [6,7,8,9]
       },
       "geometry": {
         "type": "Point",

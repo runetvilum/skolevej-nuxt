@@ -5,8 +5,11 @@
         <v-row class="fill-height" no-gutters>
           <v-col cols="12" sm="6" md="5" lg="4" xl="3">
             <v-stepper v-model="step" vertical flat>
-              <v-stepper-step step="1" complete-icon="mdi-map-marker" complete
-                >Vælg adresse</v-stepper-step
+              <v-stepper-step
+                step="1"
+                complete-icon="mdi-map-marker"
+                complete
+                >{{ adresseLabel }}</v-stepper-step
               >
               <v-stepper-content step="1">
                 <v-autocomplete
@@ -27,9 +30,9 @@
                   >Næste</v-btn
                 >
               </v-stepper-content>
-              <v-stepper-step step="2" complete-icon="mdi-account" complete
-                >Vælg klassetrin</v-stepper-step
-              >
+              <v-stepper-step step="2" complete-icon="mdi-account" complete>{{
+                klasseLabel
+              }}</v-stepper-step>
               <v-stepper-content step="2">
                 <v-select
                   v-model="klasse"
@@ -43,9 +46,9 @@
                   >Næste</v-btn
                 >
               </v-stepper-content>
-              <v-stepper-step step="3" complete-icon="mdi-school" complete
-                >Vælg skole</v-stepper-step
-              >
+              <v-stepper-step step="3" complete-icon="mdi-school" complete>{{
+                skoleLabel
+              }}</v-stepper-step>
               <v-stepper-content step="3">
                 <v-select
                   v-model="skole"
@@ -59,8 +62,11 @@
                   >Næste</v-btn
                 >
               </v-stepper-content>
-              <v-stepper-step step="4" complete-icon="mdi-bus-school" complete
-                >Vælg transport</v-stepper-step
+              <v-stepper-step
+                step="4"
+                complete-icon="mdi-bus-school"
+                complete
+                >{{ transportLabel }}</v-stepper-step
               >
               <v-stepper-content step="4">
                 <v-select
@@ -69,6 +75,13 @@
                   label="Tansport"
                   return-object
                   @change="transportChanged"
+                />
+                <v-select
+                  v-model="retning"
+                  :items="retninger"
+                  label="Retning"
+                  return-object
+                  @change="retningChanged"
                 />
 
                 <v-btn text @click="step = 3">Forrige</v-btn>
@@ -110,7 +123,11 @@
                       <v-icon color="info">mdi-bus-school</v-icon>
                     </v-list-item-action>
                     <v-list-item-content class="info--text">
-                      {{ transport && transport.text }}
+                      {{
+                        `${transport && transport.text} ${
+                          retning && retning.text
+                        }`
+                      }}
                     </v-list-item-content>
                   </v-list-item>
                 </v-list>
@@ -211,6 +228,17 @@ export default {
         },
       ],
       transport: null,
+      retninger: [
+        {
+          text: 'Fra hjem til skole',
+          value: 0,
+        },
+        {
+          text: 'Fra skole til hjem',
+          value: 1,
+        },
+      ],
+      retning: null,
       klasser: [
         {
           text: '0. klasse',
@@ -260,6 +288,26 @@ export default {
     }
   },
   computed: {
+    adresseLabel() {
+      return this.step !== 1 && this.adresse
+        ? this.adresse.tekst
+        : 'Vælg adresse'
+    },
+    klasseLabel() {
+      return this.step !== 2 && this.klasse
+        ? this.klasse.text
+        : 'Vælg klassetrin'
+    },
+    skoleLabel() {
+      return this.step !== 3 && this.skole ? this.skole.text : 'Vælg skole'
+    },
+    transportLabel() {
+      return this.step !== 4 && this.transport && this.retning
+        ? `${this.transport && this.transport.text} ${
+            this.retning && this.retning.text
+          }`
+        : 'Vælg transport'
+    },
     skoler() {
       return this.skolerFilter.map((item) => {
         return {
@@ -293,8 +341,15 @@ export default {
   },
   async mounted() {
     this.transport = this.transports[0]
+    this.retning = this.retninger[0]
     const query = this.$route.query
-    if (query.adresse && query.klasse && query.skole && query.transport) {
+    if (
+      query.adresse &&
+      query.klasse &&
+      query.skole &&
+      query.transport &&
+      query.retning
+    ) {
       const res = await this.$axios.get(
         `https://api.dataforsyningen.dk/adgangsadresser/${query.adresse}`
       )
@@ -311,6 +366,9 @@ export default {
       this.klasseChanged(this.klasse)
       this.transport = this.transports.find(
         (item) => item.value === query.transport
+      )
+      this.retning = this.retninger.find(
+        (item) => item.value === Number(query.retning)
       )
       this.skole = this.skoler.find(
         (item) => item.value === Number(query.skole)
@@ -415,10 +473,15 @@ export default {
     transportChanged(val) {
       this.getRoute()
     },
+    retningChanged(val) {
+      this.getRoute()
+    },
     save() {
       const url = `/api/pdf/${
         this.adresse.data.adgangsadresseid || this.adresse.data.id
-      }/${this.klasse.value}/${this.skole.value}/${this.transport.value}`
+      }/${this.klasse.value}/${this.skole.value}/${this.transport.value}/${
+        this.retning.value
+      }`
       // open download link in new page
       window.open(url)
 
@@ -432,6 +495,7 @@ export default {
         const res = await this.$axios.post('/api/route', {
           klasse: this.klasse.value,
           transport: this.transport.value,
+          retning: this.retning.value,
           coordinates: [
             [this.adresse.data.x, this.adresse.data.y],
             this.skole.coordinates,
