@@ -4,4 +4,5 @@ osrm/foot
 osrm/car
 osrm/bicycle
 osrm/osm
+osrm/josm
 .nuxt

@@ -33,7 +33,7 @@ def filterTags(attrs):
     if klasse == u'Hovedsti':
         tags['highway'] = 'footway'
         tags['bicycle'] = 'yes'
-    if klasse == u'Sti,diverse':
+    if klasse == u'Sti, diverse':
         tags['highway'] = 'footway'
         tags['bicycle'] = 'yes'
     if klasse == u'Cykelsti langs vej':

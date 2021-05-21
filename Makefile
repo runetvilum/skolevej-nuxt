@@ -14,8 +14,10 @@ clean:
 	rm -rf osrm/osm
 
 josm: 
-	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_vej.py -o osrm/osm/Skolevej_0-3_ny.osm osrm/data/Skolevej_0-3_20210520.geojson
-	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_old.py -o osrm/osm/Skolevej_0-3_old.osm osrm/data_old/Skolevej_0-3_20210520.geojson
+	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_vej.py -o osrm/josm/Skolevej_0-3.osm osrm/data/Skolevej_0-3_20210520.geojson
+	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_vej.py -o osrm/josm/Skolevej_4-6.osm osrm/data/Skolevej_4-6_20210520.geojson
+	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_vej.py -o osrm/josm/Skolevej_7-10.osm osrm/data/Skolevej_7-10_20210520.geojson
+	$(OGR2OSM)ogr2osm.py -f -t osrm/translations/translation_vej.py -o osrm/josm/Vejmidte.osm osrm/data/Alle_veje.geojson
 
 
 osm: clean
