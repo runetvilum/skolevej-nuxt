@@ -59,12 +59,12 @@ export default {
     const skoledistrikter79 = this.$L.geoJson(skoleDistrikt79)
     const skoledistrikter10 = this.$L.geoJson(skoleDistrikt10)
     // Set Kortforsyningen token, replace with your own token
-    const kftoken = 'b71507e0430f6b3c320d3aef5c466353'
+    // const kftoken = 'b71507e0430f6b3c320d3aef5c466353'
 
     // Set the attribution (the copyright statement shown in the lower right corner)
     // We do this as we want the same attributions for all layers
     const myAttributionText =
-      '&copy; <a target="_blank" href="https://download.kortforsyningen.dk/content/vilk%C3%A5r-og-betingelser">Styrelsen for Dataforsyning og Effektivisering</a>'
+      '&copy; <a target="_blank" href="https://www.geodanmark.dk/home/vejledninger/vilkaar-for-data-anvendelse">GeoDanmark</a>'
 
     // Make the map object using the custom projection
     // proj4.defs('EPSG:25832', "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs");
@@ -100,9 +100,8 @@ export default {
     // Define layers
     // Ortofoto [WMTS:orto_foraar]
     const ortofoto = this.$L.tileLayer(
-      'https://services.kortforsyningen.dk/orto_foraar?token=' +
-        kftoken +
-        '&request=GetTile&version=1.0.0&service=WMTS&Layer=orto_foraar&style=default&format=image/jpeg&TileMatrixSet=View1&TileMatrix={zoom}&TileRow={y}&TileCol={x}',
+      // https://services.datafordeler.dk/GeoDanmarkOrto/orto_foraar_wmts/1.0.0/WMTS?username=ZFRJKVGORV&password=Qgis-2020&service=WMTS&request=GetCapabilities
+      'https://services.datafordeler.dk/GeoDanmarkOrto/orto_foraar_wmts/1.0.0/WMTS?service=WMTS&version=1.0.0&request=GetTile&username=ZFRJKVGORV&password=Qgis-2020&Layer=orto_foraar_wmts&style=default&format=image/jpeg&TileMatrixSet=KortforsyningTilingDK&TileMatrix={zoom}&TileRow={y}&TileCol={x}',
       {
         minZoom: 0,
         maxZoom: 13,
@@ -112,8 +111,8 @@ export default {
           const zoomlevel = map._animateToZoom
             ? map._animateToZoom
             : map.getZoom()
-          if (zoomlevel < 10) return 'L0' + zoomlevel
-          else return 'L' + zoomlevel
+          // if (zoomlevel < 10) return 'L0' + zoomlevel
+          return zoomlevel
         },
       }
     )
@@ -121,16 +120,14 @@ export default {
     // Skærmkort [WMTS:topo_skaermkort]
     const skaermkort = this.$L
       .tileLayer(
-        `https://api.dataforsyningen.dk/service?servicename=topo_skaermkort_daempet&token=${kftoken}&request=GetTile&version=1.0.0&service=WMTS&Layer=dtk_skaermkort_daempet&style=default&format=image/jpeg&TileMatrixSet=View1&TileMatrix={zoom}&TileRow={y}&TileCol={x}`,
+        'https://services.datafordeler.dk/DKskaermkort/topo_skaermkort_daempet/1.0.0/wmts?service=WMTS&version=1.0.0&request=GetTile&username=ZFRJKVGORV&password=Qgis-2020&Layer=topo_skaermkort_daempet&style=default&format=image/jpeg&TileMatrixSet=View1&TileMatrix={zoom}&TileRow={y}&TileCol={x}',
         {
           minZoom: 0,
           maxZoom: 13,
           attribution: myAttributionText,
           crossOrigin: true,
           zoom(data) {
-            const zoomlevel = data.z
-            if (zoomlevel < 10) return 'L0' + zoomlevel
-            else return 'L' + zoomlevel
+            return data.z
           },
         }
       )
